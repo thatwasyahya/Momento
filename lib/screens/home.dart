@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
-            label: 'Events',
+            label: 'Event',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
