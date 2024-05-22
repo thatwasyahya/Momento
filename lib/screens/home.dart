@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:csc_picker/csc_picker.dart';
 import 'events.dart';
+import 'profile.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -14,7 +15,22 @@ class _HomePageState extends State<HomePage> {
   String stateValue = "";
   String cityValue = "";
   String address = "";
-  int _selectedIndex = 0;
+  int _selectedIndex = 2; // Home page selected by default
+
+  static const List<Widget> _pages = <Widget>[
+    // Ajoutez vos pages ici dans le même ordre que les éléments de la barre de navigation
+    Placeholder(), // Placeholder for Create
+    Placeholder(), // Placeholder for Going
+    EventsScreen(city: ''), // Remplacez par votre page d'événements
+    Placeholder(), // Placeholder for Liked
+    ProfileScreen(), // Page de profil
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,19 +145,16 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-        ),
+        ): _pages[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          // Handle navigation based on index
-        },
+        onTap: _onItemTapped,
         selectedIconTheme: IconThemeData(color: Color(0xFF0DCDAA)),
         unselectedItemColor: Color(0xFFFFFFFF),
-        items: <BottomNavigationBarItem>[
+        selectedLabelStyle: TextStyle(color: Colors.white), // Couleur des labels sélectionnés
+        unselectedLabelStyle: TextStyle(color: Color(0xFF0DCDAA)), // Couleur des labels non sélectionnés
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
             label: 'Create',
@@ -152,7 +165,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
-            label: 'Event',
+            label: 'Events',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),

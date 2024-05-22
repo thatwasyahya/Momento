@@ -182,7 +182,7 @@ class EventCard extends StatelessWidget {
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.save_alt),
+                      icon: Icon(Icons.share),
                       onPressed: () {
                         // Handle save button tap
                       },
