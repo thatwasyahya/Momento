@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/user.dart';
 
 class ProfileScreen extends StatelessWidget {
+  final User user;
+
+  const ProfileScreen({Key? key, required this.user}) : super(key: key);
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +23,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text(
-              'John Doe',
+              'Username: ${user.username}',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -25,7 +31,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              'john.doe@example.com',
+              'Email: ${user.email}',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
@@ -38,6 +44,41 @@ class ProfileScreen extends StatelessWidget {
               },
               child: Text('Edit Profile'),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import '../models/user.dart';
+
+class ProfileScreen extends StatelessWidget {
+  final User user;
+
+  const ProfileScreen({Key? key, required this.user}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Profile'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Username: ${user.username}',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Email: ${user.email}',
+              style: TextStyle(fontSize: 20),
+            ),
+            // Add more user details here
           ],
         ),
       ),

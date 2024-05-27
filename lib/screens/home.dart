@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:csc_picker/csc_picker.dart';
 import 'events.dart';
 import 'profile.dart';
+import '../models/user.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final User user;
+  const HomePage({Key? key, required this.user}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -17,14 +19,19 @@ class _HomePageState extends State<HomePage> {
   String address = "";
   int _selectedIndex = 2; // Home page selected by default
 
-  static const List<Widget> _pages = <Widget>[
-    // Ajoutez vos pages ici dans le même ordre que les éléments de la barre de navigation
-    Placeholder(), // Placeholder for Create
-    Placeholder(), // Placeholder for Going
-    EventsScreen(city: ''), // Remplacez par votre page d'événements
-    Placeholder(), // Placeholder for Liked
-    ProfileScreen(), // Page de profil
-  ];
+  late List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = <Widget>[
+      Placeholder(), // Placeholder for Create
+      Placeholder(), // Placeholder for Going
+      EventsScreen(city: ''), // Remplacez par votre page d'événements
+      Placeholder(), // Placeholder for Liked
+      ProfileScreen(user: widget.user), // Page de profil avec l'utilisateur connecté
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -35,11 +42,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
       body: Center(
-        child: Container(
+        child: _selectedIndex == 2
+            ? Container(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           height: 600,
           child: Column(
@@ -63,7 +68,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 20),
-
               const Positioned(
                 left: 0,
                 top: 180.25,
@@ -88,7 +92,8 @@ class _HomePageState extends State<HomePage> {
                 showCities: true,
                 flagState: CountryFlag.DISABLE,
                 dropdownDecoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderRadius:
+                  const BorderRadius.all(Radius.circular(10)),
                   color: Color(0xFF0DCDAA),
                 ),
                 countrySearchPlaceholder: "Country",
@@ -145,7 +150,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-        ): _pages[_selectedIndex],
+        )
+            : _pages[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

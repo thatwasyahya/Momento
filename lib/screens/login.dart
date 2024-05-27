@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
 import 'welcome.dart';
-import '../utils/database_helper.dart'; // Importez le fichier de base de données
-import '../models/user.dart'; // Importez le modèle d'utilisateur
+import '../utils/database_helper.dart';
+import '../models/user.dart';
 
 class LogInPage extends StatefulWidget {
   const LogInPage({Key? key}) : super(key: key);
@@ -14,15 +14,15 @@ class LogInPage extends StatefulWidget {
 class _LogInPageState extends State<LogInPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final DatabaseHelper dbHelper = DatabaseHelper(); // Initialisez la classe DatabaseHelper
+  final DatabaseHelper dbHelper = DatabaseHelper();
 
+  User? loggedInUser;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Log In'),
-        // Ajouter une icône de flèche de retour
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -57,7 +57,7 @@ class _LogInPageState extends State<LogInPage> {
             ),
             SizedBox(height: 20),
             TextFormField(
-            controller: passwordController,
+              controller: passwordController,
               decoration: InputDecoration(
                 labelText: 'Password',
                 hintText: 'Enter your password',
@@ -80,25 +80,29 @@ class _LogInPageState extends State<LogInPage> {
             SizedBox(height: 50),
             ElevatedButton(
               onPressed: () async {
-                // Récupérer les informations de connexion saisies par l'utilisateur
-                // Par exemple, vous pouvez utiliser les valeurs des TextFormField
-                String email = emailController.text; // Récupérer l'email
-                String password = passwordController.text; // Récupérer le mot de passe
+                String email = emailController.text;
+                String password = passwordController.text;
 
-                // Vérifier si les informations de connexion sont valides dans la base de données
                 bool isValid = await dbHelper.isValidUser(email, password);
 
                 if (isValid) {
-                  // Si les informations sont valides, naviguer vers une nouvelle page ou afficher un message de confirmation
-                  // Par exemple, naviguer vers la page d'accueil
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
+                  // Récupérer l'utilisateur depuis la base de données
+                  List<User> users = await dbHelper.getUsers();
+                  for (User user in users) {
+                    if (user.email == email && user.password == password) {
+                      loggedInUser = user;
+                      break;
+                    }
+                  }
+                  if (loggedInUser != null) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => HomePage(user: loggedInUser!)),
+                    );
+                  }
                 } else {
-                  // Sinon, afficher un message d'erreur
                   showDialog(
                     context: context,
-                      builder: (BuildContext context) {
+                    builder: (BuildContext context) {
                       return AlertDialog(
                         title: Text('Error'),
                         content: Text('Invalid email or password. Please try again.'),
