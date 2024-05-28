@@ -1,16 +1,26 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../models/LikedEvent.dart';
+import '../utils/LikedEventDatabase.dart';
+import '../models/GoingToEvent.dart';
+import '../utils/GoingToEventDatabase.dart';
+import '../utils/created_events_database.dart';
+import 'create_event_screen.dart';
+import '../models/CreatedEvent.dart';
+
 
 class Event {
   final String name;
   final String date;
+  final String city;
   final String venue;
   String imageUrl;
 
   Event({
     required this.name,
     required this.date,
+    required this.city,
     required this.venue,
     required this.imageUrl,
   });
@@ -27,12 +37,14 @@ class EventsScreen extends StatefulWidget {
 
 class _EventsScreenState extends State<EventsScreen> {
   List<Event> events = [];
+  List<CreatedEvent> createdEvents = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     fetchEvents();
+    fetchCreatedEvents();
   }
 
   Future<void> fetchEvents() async {
@@ -61,6 +73,7 @@ class _EventsScreenState extends State<EventsScreen> {
           final eventImageUrl = await fetchEventImage(eventName, unsplashApiKey);
           return Event(
             name: eventName,
+            city: city,
             date: eventDate,
             venue: eventVenue,
             imageUrl: eventImageUrl,
@@ -82,6 +95,11 @@ class _EventsScreenState extends State<EventsScreen> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> fetchCreatedEvents() async {
+    createdEvents = await CreatedEventDatabase.instance.readAllEvents();
+    setState(() {});
   }
 
   Future<String> fetchEventImage(String eventName, String unsplashApiKey) async {
@@ -115,91 +133,125 @@ class _EventsScreenState extends State<EventsScreen> {
     }
   }
 
+  Future<void> _likeEvent(Event event) async {
+    final likedEvent = LikedEvent(
+      name: event.name,
+      date: event.date,
+      venue: event.venue,
+      imageUrl: event.imageUrl,
+    );
+    await LikedEventDatabase.instance.create(likedEvent);
+  }
+
+  Future<void> _goingtoEvent(Event event) async {
+    final goingtoEvent = GoingToEvent(
+      name: event.name,
+      date: event.date,
+      venue: event.venue,
+      imageUrl: event.imageUrl,
+    );
+    await GoingToEventDatabase.instance.create(goingtoEvent);
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Filter created events by the city selected in EventsScreen
+    final filteredCreatedEvents = createdEvents
+        .where((event) => event.city.toLowerCase() == widget.city.toLowerCase())
+        .map((createdEvent) => Event(
+      name: createdEvent.name,
+      city: createdEvent.city,
+      date: createdEvent.date,
+      venue: createdEvent.venue,
+      imageUrl: createdEvent.imageUrl,
+    ))
+        .toList();
+
+    final allEvents = [...filteredCreatedEvents, ...events];
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Events in ${widget.city}'),
       ),
       body: isLoading
-          ? Center(
-        child: CircularProgressIndicator(),
-      )
-          : events.isEmpty
-          ? Center(
-        child: Text('No events found.'),
-      )
-          : ListView.builder(
-        itemCount: events.length,
-        itemBuilder: (context, index) {
-          final event = events[index];
-          return EventCard(event: event);
-        },
-      ),
-    );
-  }
-}
-
-class EventCard extends StatelessWidget {
-  final Event event;
-
-  EventCard({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Image.network(
-            event.imageUrl,
-            fit: BoxFit.cover,
-            height: 200.0,
-          ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.name,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+          : allEvents.isEmpty
+            ? Center(
+                child: Text('No events found.'),
+              )
+            : ListView.builder(
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = allEvents[index];
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Image.network(
+                        event.imageUrl,
+                        fit: BoxFit.cover,
+                        height: 200.0,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.name,
+                              style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8.0),
+                            Text('Date: ${event.date}\nVenue: ${event.venue}'),
+                            SizedBox(height: 8.0),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.favorite_border),
+                                  onPressed: () async {
+                                    await _likeEvent(event);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('${event.name} liked!')),
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.event),
+                                  onPressed: () async {
+                                    await _goingtoEvent(event);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('${event.name} Going To!')),
+                                    );
+                                  }
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.share),
+                                  onPressed: () {
+                                    // Handle going button tap
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                SizedBox(height: 8.0),
-                Text('Date: ${event.date}\nVenue: ${event.venue}'),
-                SizedBox(height: 8.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.favorite_border),
-                      onPressed: () {
-                        // Handle like button tap
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.share),
-                      onPressed: () {
-                        // Handle save button tap
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.event),
-                      onPressed: () {
-                        // Handle going button tap
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                );
+              },
             ),
-          ),
-        ],
-      ),
+
+
     );
   }
 }
+
+

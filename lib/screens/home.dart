@@ -3,6 +3,10 @@ import 'package:csc_picker/csc_picker.dart';
 import 'events.dart';
 import 'profile.dart';
 import '../models/user.dart';
+import 'liked_events.dart';
+import 'goingto_events.dart';
+import 'create_event_screen.dart';
+
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -25,11 +29,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _pages = <Widget>[
-      Placeholder(), // Placeholder for Create
-      Placeholder(), // Placeholder for Going
-      EventsScreen(city: ''), // Remplacez par votre page d'événements
-      Placeholder(), // Placeholder for Liked
-      ProfileScreen(user: widget.user), // Page de profil avec l'utilisateur connecté
+      CreateEventScreen(),
+      GoingToEventsScreen(),
+      EventsScreen(city: ''),
+      LikedEventsScreen(),
+      ProfileScreen(user: widget.user),
     ];
   }
 
