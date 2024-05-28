@@ -8,6 +8,8 @@ import '../utils/GoingToEventDatabase.dart';
 import '../utils/created_events_database.dart';
 import 'create_event_screen.dart';
 import '../models/CreatedEvent.dart';
+import 'dart:io';
+import 'package:share/share.dart';
 
 
 class Event {
@@ -99,6 +101,7 @@ class _EventsScreenState extends State<EventsScreen> {
 
   Future<void> fetchCreatedEvents() async {
     createdEvents = await CreatedEventDatabase.instance.readAllEvents();
+    print('Created events fetched: $createdEvents');
     setState(() {});
   }
 
@@ -167,6 +170,8 @@ class _EventsScreenState extends State<EventsScreen> {
     ))
         .toList();
 
+    print('Filtered created events: $filteredCreatedEvents');
+
     final allEvents = [...filteredCreatedEvents, ...events];
 
     return Scaffold(
@@ -174,84 +179,87 @@ class _EventsScreenState extends State<EventsScreen> {
         title: Text('Events in ${widget.city}'),
       ),
       body: isLoading
-        ? Center(
-            child: CircularProgressIndicator(),
-          )
+          ? Center(
+        child: CircularProgressIndicator(),
+      )
           : allEvents.isEmpty
-            ? Center(
-                child: Text('No events found.'),
-              )
-            : ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = allEvents[index];
-                return Card(
-                  margin: EdgeInsets.all(8.0),
+          ? Center(
+        child: Text('No events found.'),
+      )
+          : ListView.builder(
+        itemCount: allEvents.length,
+        itemBuilder: (context, index) {
+          final event = allEvents[index];
+          return Card(
+            margin: EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                event.imageUrl.startsWith('http')
+                    ? Image.network(
+                  event.imageUrl,
+                  fit: BoxFit.cover,
+                  height: 200.0,
+                )
+                    : Image.file(
+                  File(event.imageUrl),
+                  fit: BoxFit.cover,
+                  height: 200.0,
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.network(
-                        event.imageUrl,
-                        fit: BoxFit.cover,
-                        height: 200.0,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              event.name,
-                              style: TextStyle(
-                                fontSize: 18.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 8.0),
-                            Text('Date: ${event.date}\nVenue: ${event.venue}'),
-                            SizedBox(height: 8.0),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.favorite_border),
-                                  onPressed: () async {
-                                    await _likeEvent(event);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('${event.name} liked!')),
-                                    );
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.event),
-                                  onPressed: () async {
-                                    await _goingtoEvent(event);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('${event.name} Going To!')),
-                                    );
-                                  }
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.share),
-                                  onPressed: () {
-                                    // Handle going button tap
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
+                      Text(
+                        event.name,
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      SizedBox(height: 8.0),
+                      Text('Date: ${event.date}\nVenue: ${event.venue}'),
+                      SizedBox(height: 8.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.favorite_border),
+                            onPressed: () async {
+                              await _likeEvent(event);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${event.name} liked!')),
+                              );
+                            },
+                          ),
+                          IconButton(
+                              icon: Icon(Icons.event),
+                              onPressed: () async {
+                                await _goingtoEvent(event);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text('${event.name} Going To!')),
+                                );
+                              }
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.share),
+                            onPressed: () {
+                              // Share event details
+                              Share.share('Check out this event: ${event.name} happening on ${event.date} at ${event.venue}!');
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+              ],
             ),
-
-
+          );
+        },
+      ),
     );
   }
 }
-
-

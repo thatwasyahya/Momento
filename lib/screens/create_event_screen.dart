@@ -18,11 +18,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   File? _image;
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
+    try {
+      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _image = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      _showErrorDialog('Failed to pick image');
     }
   }
 
@@ -40,8 +45,39 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       await CreatedEventDatabase.instance.create(newEvent);
 
-      Navigator.pop(context);
+      // Display a SnackBar notification
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Event added successfully!'),
+        ),
+      );
+
+      // Optionally, clear the form fields
+      _formKey.currentState!.reset();
+      setState(() {
+        _image = null; // Clear the image
+      });
+    } else {
+      _showErrorDialog('Please fill all fields and select an image.');
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -124,4 +160,3 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 }
-
