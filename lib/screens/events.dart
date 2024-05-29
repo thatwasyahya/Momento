@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/LikedEvent.dart';
@@ -8,9 +9,7 @@ import '../utils/GoingToEventDatabase.dart';
 import '../utils/created_events_database.dart';
 import 'create_event_screen.dart';
 import '../models/CreatedEvent.dart';
-import 'dart:io';
 import 'package:share/share.dart';
-
 
 class Event {
   final String name;
@@ -41,6 +40,8 @@ class _EventsScreenState extends State<EventsScreen> {
   List<Event> events = [];
   List<CreatedEvent> createdEvents = [];
   bool isLoading = false;
+  Map<String, bool> likedStatus = {};
+  Map<String, bool> goingToStatus = {};
 
   @override
   void initState() {
@@ -144,6 +145,9 @@ class _EventsScreenState extends State<EventsScreen> {
       imageUrl: event.imageUrl,
     );
     await LikedEventDatabase.instance.create(likedEvent);
+    setState(() {
+      likedStatus[event.name] = true;
+    });
   }
 
   Future<void> _goingtoEvent(Event event) async {
@@ -154,6 +158,9 @@ class _EventsScreenState extends State<EventsScreen> {
       imageUrl: event.imageUrl,
     );
     await GoingToEventDatabase.instance.create(goingtoEvent);
+    setState(() {
+      goingToStatus[event.name] = true;
+    });
   }
 
   @override
@@ -190,12 +197,21 @@ class _EventsScreenState extends State<EventsScreen> {
         itemCount: allEvents.length,
         itemBuilder: (context, index) {
           final event = allEvents[index];
+          final isLiked = likedStatus[event.name] ?? false;
+          final isGoingTo = goingToStatus[event.name] ?? false;
+
           return Card(
+            color: Colors.white.withOpacity(0.8),
+            elevation: 5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
             margin: EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                event.imageUrl.startsWith('http')
+                event.imageUrl.isNotEmpty
+                    ? (event.imageUrl.startsWith('http')
                     ? Image.network(
                   event.imageUrl,
                   fit: BoxFit.cover,
@@ -203,6 +219,11 @@ class _EventsScreenState extends State<EventsScreen> {
                 )
                     : Image.file(
                   File(event.imageUrl),
+                  fit: BoxFit.cover,
+                  height: 200.0,
+                ))
+                    : Image.asset(
+                  'assets/images/default_image.png',
                   fit: BoxFit.cover,
                   height: 200.0,
                 ),
@@ -225,7 +246,10 @@ class _EventsScreenState extends State<EventsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.favorite_border),
+                            icon: Icon(
+                              Icons.favorite,
+                              color: isLiked ? Colors.red : Colors.grey,
+                            ),
                             onPressed: () async {
                               await _likeEvent(event);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -234,19 +258,23 @@ class _EventsScreenState extends State<EventsScreen> {
                             },
                           ),
                           IconButton(
-                              icon: Icon(Icons.event),
-                              onPressed: () async {
-                                await _goingtoEvent(event);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('${event.name} Going To!')),
-                                );
-                              }
+                            icon: Icon(
+                              Icons.event,
+                              color: isGoingTo ? Colors.green : Colors.grey,
+                            ),
+                            onPressed: () async {
+                              await _goingtoEvent(event);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${event.name} Going To!')),
+                              );
+                            },
                           ),
                           IconButton(
-                            icon: Icon(Icons.share),
+                            icon: Icon(
+                              Icons.share,
+                              color: Colors.blue,
+                            ),
                             onPressed: () {
-                              // Share event details
                               Share.share('Check out this event: ${event.name} happening on ${event.date} at ${event.venue}!');
                             },
                           ),

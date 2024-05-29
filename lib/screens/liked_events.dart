@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/LikedEventDatabase.dart';
 import '../models/LikedEvent.dart';
-
+import 'dart:io'; // Add this import
 
 class LikedEventsScreen extends StatefulWidget {
   @override
@@ -47,8 +47,20 @@ class _LikedEventsScreenState extends State<LikedEventsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Image.network(
+                      event.imageUrl.isNotEmpty
+                          ? (event.imageUrl.startsWith('http')
+                          ? Image.network(
                         event.imageUrl,
+                        fit: BoxFit.cover,
+                        height: 200.0,
+                      )
+                          : Image.file(
+                        File(event.imageUrl),
+                        fit: BoxFit.cover,
+                        height: 200.0,
+                      ))
+                          : Image.asset(
+                        'assets/images/default_image.png',
                         fit: BoxFit.cover,
                         height: 200.0,
                       ),
